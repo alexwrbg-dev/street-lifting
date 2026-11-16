@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0c11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Street Lifting">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Street Lifting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0c11;--card:#131720;--card2:#1a1f2b;--line:#232a39;--txt:#eef1f7;--mut:#8b94a9;--acc:#ff6b3d;--acc2:#ffb03d;--push:#4d8dff;--pull:#ff5a5f;--legs:#3ddc97;--skill:#a78bfa;--r:20px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding-bottom:calc(88px + env(safe-area-inset-bottom));background:radial-gradient(900px 400px at 100% -10%,rgba(255,107,61,.10),transparent 60%),var(--bg);min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+#app{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px 18px}
+html{overscroll-behavior-y:none}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin:4px 2px 18px;gap:10px}
+h1{font-family:'Space Grotesk',sans-serif;font-size:30px;margin:3px 0 0;letter-spacing:-.6px;line-height:1.05}
+h2{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0 0 10px;letter-spacing:-.3px}
+h3{font-size:13px;margin:0 0 10px;color:var(--mut);text-transform:uppercase;letter-spacing:1.1px;font-weight:600}
+.eyebrow{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1.3px;font-weight:600}
+.sync{font-size:11px;color:var(--mut);border:1px solid var(--line);padding:6px 10px;border-radius:99px;white-space:nowrap}
+.sync.ok{color:var(--legs);border-color:#1d4a37}
+.sync.err{color:var(--pull);border-color:#4a1d25}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.muted{color:var(--mut)}
+.small{font-size:13px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;background:var(--card2);border:1px solid var(--line);color:var(--txt)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--c,var(--acc))}
+/* date nav */
+.dnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dnav button{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:18px}
+.dnav .mid{text-align:center}
+.dnav .mid b{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:18px;display:block}
+.dnav .mid span{font-size:12px;color:var(--mut)}
+/* session */
+.sess{position:relative;overflow:hidden}
+.sess::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--c),transparent)}
+.sess-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.sess-h h2{margin:6px 0 0;font-size:22px}
+.place{font-size:12px;color:var(--mut);font-weight:600}
+.banner{font-size:13px;line-height:1.45;padding:10px 12px;border-radius:14px;background:rgba(255,176,61,.08);border:1px solid rgba(255,176,61,.25);color:#ffd59a;margin:10px 0 4px}
+.ex{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid #333b4d;flex:none;display:grid;place-items:center;transition:all .2s;background:none;padding:0;margin-top:1px}
+.chk.on{background:var(--c,var(--acc));border-color:var(--c,var(--acc));transform:scale(1.05)}
+.chk.on::after{content:'';width:10px;height:6px;border:2.5px solid #0a0c11;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.exb{flex:1;min-width:0}
+.exn{font-weight:600;font-size:15px;line-height:1.3}
+.exd{color:var(--mut);font-size:13px;margin-top:4px;line-height:1.45}
+.ex.done .exn{color:var(--mut);text-decoration:line-through;text-decoration-color:#555}
+.rx{display:inline-flex;gap:8px;align-items:baseline;margin-top:8px;background:var(--card2);border:1px solid var(--line);padding:7px 12px;border-radius:12px;font-family:'Space Grotesk',Inter,system-ui,sans-serif}
+.rx b{font-size:17px}
+.rx span{color:var(--c,var(--acc2));font-size:15px;font-weight:600}
+.mini{background:none;border:1px solid var(--line);color:var(--mut);font-size:12px;font-weight:600;padding:6px 10px;border-radius:10px;margin-left:8px}
+.oc{display:flex;gap:8px;margin-top:10px}
+.ocb{flex:1;padding:11px 0;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font-weight:700;font-size:14px}
+.ocb.ok.on{background:rgba(61,220,151,.15);border-color:#1d4a37;color:var(--legs)}
+.ocb.ko.on{background:rgba(255,90,95,.12);border-color:#4a1d25;color:var(--pull)}
+.donebtn{width:100%;margin-top:14px;border:0;border-radius:16px;padding:16px;font-size:16px;font-weight:700;color:#140a05;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 10px 30px -10px rgba(255,107,61,.6);transition:transform .15s}
+.donebtn:active{transform:scale(.98)}
+.donebtn.is{background:var(--card2);color:var(--legs);border:1px solid #1d4a37;box-shadow:none}
+.rest{text-align:center;padding:28px 16px}
+.rest .big{font-size:46px}
+/* calendar */
+.cal{display:grid;grid-template-columns:26px repeat(7,1fr);gap:5px;align-items:center}
+.cal .lbl{font-size:10px;color:var(--mut);text-align:center;font-weight:600}
+.cal .d{aspect-ratio:1;border-radius:7px;background:var(--card2);border:0;padding:0}
+.cal .d.done{background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.cal .d.miss{background:#2c1a20}
+.cal .d.rest{background:transparent;border:1px dashed #2b3242}
+.cal .d.dl{background:#18233d}
+.cal .d.dl.rest{background:transparent}
+.cal .d.test{box-shadow:inset 0 0 0 2px var(--acc2);position:relative}
+.cal .d.test::after{content:'🏆';position:absolute;inset:0;display:grid;place-items:center;font-size:11px}
+.cal .d.test.done::after{content:'✓';color:#140a05;font-weight:800}
+.cal .d.today{outline:2px solid var(--txt);outline-offset:1px}
+.cal .d.sel{outline:2px solid var(--acc2);outline-offset:1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:12px}
+.stat b{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:22px;display:block}
+.stat span{font-size:11px;color:var(--mut);font-weight:600}
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:13px;font-weight:600;padding:8px 13px;border-radius:99px}
+.chip.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
+.chip.cur{border-color:var(--acc)}
+/* program */
+.phase{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:10px 0 8px}
+.phase div{height:8px;border-radius:3px;background:var(--card2)}
+.phase .c{background:var(--push)}.phase .dl{background:#3b4255}.phase .f{background:var(--acc)}.phase .i{background:var(--pull)}.phase .t{background:var(--acc2)}
+.phase .on{outline:2px solid var(--txt);outline-offset:1px}
+details.day{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;overflow:hidden}
+details.day summary{list-style:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+details.day summary::-webkit-details-marker{display:none}
+details.day .bar{width:4px;align-self:stretch;border-radius:4px;background:var(--c)}
+details.day .t1{font-weight:700;font-size:15px}
+details.day .t2{font-size:12px;color:var(--mut);margin-top:2px}
+details.day .chev{margin-left:auto;color:var(--mut);transition:transform .2s}
+details.day[open] .chev{transform:rotate(90deg)}
+details.day .body{padding:0 16px 8px}
+.pex{padding:10px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.pex .r{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-weight:600;text-align:right;white-space:nowrap}
+.pex .r em{display:block;font-style:normal;color:var(--c);font-size:13px}
+/* records */
+.rec-h{display:flex;justify-content:space-between;align-items:flex-start}
+.rec-big{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:28px;font-weight:700;letter-spacing:-.5px}
+.rec-big small{font-size:14px;color:var(--mut);font-weight:500}
+.goal{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:10px}
+.goal div{height:100%;background:linear-gradient(90deg,var(--c),var(--acc2));border-radius:99px;transition:width .6s}
+.hist{margin-top:10px;border-top:1px solid var(--line)}
+.hist .h{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.hist .h:last-child{border-bottom:0}
+.x{background:none;border:0;color:var(--mut);font-size:12px;padding:4px 8px;border-radius:8px}
+.x.arm{background:#3a1820;color:var(--pull)}
+.btn{border:1px solid var(--line);background:var(--card2);color:var(--txt);font-weight:600;font-size:14px;padding:12px 14px;border-radius:14px}
+.btn.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;color:#140a05}
+.btn.full{width:100%}
+.btn.danger{color:var(--pull)}
+input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);font:500 16px Inter;padding:12px;border-radius:12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin:12px 0 6px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:10px 0;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font-weight:600}
+.seg button.on{background:var(--txt);color:var(--bg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chartwrap{position:relative;height:250px}
+/* tabs */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;background:rgba(10,12,17,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+.tabs .in{display:flex;max-width:520px;width:100%}
+.tabs button{background:none;border:0;color:var(--mut);font:600 11px Inter;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;flex:1}
+.tabs svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{color:var(--txt)}
+.tabs button.on svg{stroke:var(--acc)}
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet.hidden{display:none}
+.sheet .bg{position:absolute;inset:0;background:rgba(0,0,0,.6);animation:fade .2s}
+.sheet .sc{position:relative;width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));animation:up .25s cubic-bezier(.2,.9,.3,1)}
+.grab{width:40px;height:5px;border-radius:9px;background:#333b4d;margin:0 auto 14px}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes fade{from{opacity:0}}
+#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);font-weight:600;font-size:14px;padding:11px 16px;border-radius:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.pop{animation:pop .5s}
+@keyframes pop{30%{transform:scale(1.04)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div><div class="eyebrow" id="eyebrow"></div><h1 id="title">Aujourd'hui</h1></div>
+    <div class="sync" id="sync">📱 Sur ce téléphone</div>
+  </header>
+  <main id="view"></main>
+</div>
+<nav class="tabs"><div class="in">
+  <button data-tab="today" class="on"><svg viewBox="0 0 24 24"><path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M2 11v2M22 11v2"/></svg>Séance</button>
+  <button data-tab="prog"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Programme</button>
+  <button data-tab="rec"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Records</button>
+  <button data-tab="stats"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>Progrès</button>
+</div></nav>
+<div id="sheet" class="sheet hidden"><div class="bg" id="sheetBg"></div><div class="sc" id="sheetCard"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ============ utils ============ */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const x = parse(s); x.setDate(x.getDate() + n); return iso(x); };
+const dd = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+const todayISO = () => iso(new Date());
+const fmt = x => (Math.round(x * 100) / 100).toString().replace('.', ',');
+const r125 = x => Math.round(x / 1.25) * 1.25;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DNAME = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const MONTH = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const nice = s => { const d = parse(s); return DNAME[d.getDay()] + ' ' + d.getDate() + ' ' + MONTH[d.getMonth()]; };
+const short = s => { const d = parse(s); return d.getDate() + ' ' + MONTH[d.getMonth()]; };
+
+/* ============ data model ============ */
+const LIFTS = {
+  dips: { name: 'Dips lestés', short: 'Dips', bw: true, goal: 70, c: '#4d8dff' },
+  tractions: { name: 'Tractions lestées', short: 'Tractions', bw: true, goal: 40, c: '#ff5a5f' },
+  mu: { name: 'Muscle-up lesté', short: 'Muscle-up', bw: true, goal: 10, c: '#ffb03d' },
+  squat: { name: 'Squat barre', short: 'Squat', bw: false, goal: 150, c: '#3ddc97' }
+};
+const SKILLS = {
+  planche: { name: 'Planche', levels: ['Tuck', 'Advanced tuck', 'Une jambe / half lay', 'Straddle', 'Full'], c: '#a78bfa' },
+  fl: { name: 'Front lever', levels: ['Tuck', 'Advanced tuck', 'Une jambe', 'Straddle', 'Full'], c: '#a78bfa' }
+};
+const BW_START = 69.5, BW_GOAL = 73;
+
+function defaultStart() {
+  const d = new Date(), w = d.getDay();
+  const off = w === 0 ? 1 : w === 6 ? 2 : -(w - 1);
+  d.setDate(d.getDate() + off); return iso(d);
+}
+function defState() {
+  const t = todayISO();
+  return {
+    v: 2, start: defaultStart(),
+    bw: [{ d: t, kg: BW_START }],
+    rec: {
+      dips: [{ d: t, kg: 35, reps: 3, rir: 2 }],
+      tractions: [{ d: t, kg: 15, reps: 3, rir: 2 }],
+      mu: [{ d: t, kg: 1.25, reps: 1, rir: 0 }],
+      squat: [{ d: t, kg: 100, reps: 1, rir: 0 }],
+      hspu: [], planche: [{ d: t, lvl: 1, sec: 15 }], fl: [{ d: t, lvl: 2, sec: 15 }], hs: [{ d: t, sec: 32 }]
+    },
+    done: {}, chk: {}, out: {}
+  };
+}
+let needSave = false;
+function norm(s) {
+  const d = defState();
+  if (!s || typeof s !== 'object') return d;
+  const out = Object.assign({}, d, s);
+  out.rec = Object.assign({}, d.rec, s.rec || {});
+  for (const k in d.rec) if (!Array.isArray(out.rec[k])) out.rec[k] = [];
+  for (const k of ['planche', 'fl', 'hs']) if (!out.rec[k].length) out.rec[k] = d.rec[k];
+  if (!Array.isArray(out.bw) || !out.bw.length) out.bw = d.bw;
+  out.done = out.done || {}; out.chk = out.chk || {};
+  out.out = (s.out && typeof s.out === 'object') ? s.out : {};
+  if (!(s.v >= 2)) { // mise à jour v2 : squat 1RM 100 kg, muscle-up propre à +1,25 kg
+    const t = todayISO();
+    out.rec.squat = out.rec.squat.concat([{ d: t, kg: 100, reps: 1, rir: 0 }]);
+    out.rec.mu = out.rec.mu.filter(r => +r.kg > 0).concat([{ d: t, kg: 1.25, reps: 1, rir: 0 }]);
+    const lb = out.bw.slice().sort((a, b) => a.d < b.d ? -1 : 1).slice(-1)[0];
+    if (lb && +lb.kg === 63.6) out.bw = out.bw.concat([{ d: t, kg: 69.5 }]);
+    out.v = 2; needSave = true;
+  }
+  return out;
+}
+
+/* ============ storage (cloud db + local fallback) ============ */
+let S = (() => { try { const j = localStorage.getItem('sl12'); if (j) return norm(JSON.parse(j)); } catch (e) {} return defState(); })();
+if (needSave) { needSave = false; try { localStorage.setItem('sl12', JSON.stringify(S)); } catch (e) {} }
+let ref = null, writing = false, dirty = false, timer = null;
+function setSync(st) {
+  const el = $('#sync');
+  el.className = 'sync' + (st === 'ok' ? ' ok' : st === 'err' ? ' err' : '');
+  el.textContent = st === 'ok' ? '☁︎ Synchronisé' : st === 'err' ? 'Hors ligne' : st === 'wait' ? 'Connexion…' : '📱 Sur ce téléphone';
+}
+function persist() {
+  try { localStorage.setItem('sl12', JSON.stringify(S)); } catch (e) {}
+  if (ref) { clearTimeout(timer); timer = setTimeout(() => { timer = null; flush(); }, 600); }
+}
+async function flush() {
+  if (!ref) return;
+  if (writing) { dirty = true; return; }
+  writing = true;
+  try { await ref.set(JSON.parse(JSON.stringify(S))); setSync('ok'); } catch (e) { setSync('err'); }
+  writing = false;
+  if (dirty) { dirty = false; flush(); }
+}
+async function connect() {
+  if (!window.claude || typeof window.claude.use !== 'function') return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const uid = await user.id(); if (!uid) return;
+    ref = db.doc('data/users/' + uid + '/state');
+    setSync('wait');
+    let first = true;
+    const to = setTimeout(() => setSync('err'), 10000);
+    ref.onSnapshot(snap => {
+      if (snap.metadata.hasPendingWrites || writing || timer) return;
+      if (!snap.metadata.fromCache) clearTimeout(to);
+      if (snap.exists) {
+        const j = JSON.stringify(snap.data());
+        if (j !== JSON.stringify(S)) { S = norm(JSON.parse(j)); if (needSave) { needSave = false; persist(); } else { try { localStorage.setItem('sl12', j); } catch (e) {} } render(); }
+        if (!snap.metadata.fromCache) setSync('ok');
+      } else if (!snap.metadata.fromCache && first) { flush(); }
+      if (!snap.metadata.fromCache) first = false;
+    }, () => { clearTimeout(to); setSync('err'); });
+  } catch (e) {}
+}
+
+/* ============ training logic ============ */
+const curBW = () => S.bw.slice().sort((a, b) => a.d < b.d ? -1 : 1).slice(-1)[0].kg;
+const sorted = arr => arr.slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+const latest = k => { const a = sorted(S.rec[k] || []); return a[a.length - 1] || null; };
+// 1RM estimé = charge totale × (1 + (reps + réserve − 1) / 30) : un vrai 1RM (1 rep à l'échec) vaut lui-même
+const REF = 1 + 4 / 30; // série de référence : 3 reps avec 2 en réserve
+const STEP = { dips: 1.25, tractions: 1.25, mu: 1.25, squat: 2.5 }; // gain par séance force réussie
+const GRID = { dips: 1.25, tractions: 1.25, mu: 1.25, squat: 2.5 };
+const rnd = (k, x) => Math.round(x / GRID[k]) * GRID[k];
+const recE = (k, r, bw) => (+r.kg + bw) * (1 + Math.max(0, +r.reps + (+r.rir || 0) - 1) / 30);
+// séances force validées « Réussi » depuis le dernier record (et avant la date regardée)
+function wins(k, from, before) {
+  let n = 0;
+  for (const d in S.out) { const o = S.out[d] && S.out[d][k]; if (o && o.ok === 1 && d >= from && d < before) n++; }
+  return n;
+}
+// base du programme : dernier record + un palier par séance force réussie depuis
+function tm(k, date) {
+  const r = latest(k); if (!r) return null;
+  const bw = LIFTS[k].bw ? curBW() : 0;
+  const n = wins(k, r.d, date || '9999-12-31');
+  return { e: recE(k, r, bw) + n * STEP[k] * (k === 'mu' ? 1 : REF), bw, n, rec: r };
+}
+const e1rmAdded = k => { const x = tm(k); return x ? x.e - x.bw : null; };
+
+function weekOf(date) { return Math.floor(dd(S.start, date) / 7) + 1; }
+const clampW = w => Math.max(1, Math.min(12, w));
+function phaseName(w) { return w <= 3 ? 'Construction' : (w === 4 || w === 8) ? 'Deload' : w <= 7 ? 'Force' : w <= 11 ? 'Intensification' : 'Test'; }
+function phaseCls(w) { return w <= 3 ? 'c' : (w === 4 || w === 8) ? 'dl' : w <= 7 ? 'f' : w <= 11 ? 'i' : 't'; }
+const isDeload = w => w === 4 || w === 8;
+// semaines de test : S5 = 3RM, S9 = 2RM, S12 = 1RM (le MU se teste toujours en 1RM)
+const TEST_W = { 5: 3, 9: 2, 12: 1 };
+function isTestDay(date) {
+  const w = weekOf(date), d = parse(date).getDay();
+  return !!TEST_W[w] && (d === 3 || d === 5 || d === 6 || (w === 12 && d === 0));
+}
+
+// [séries, reps, reps en réserve visées]
+const T = {
+  force: { 1: [5, 3, 2], 2: [5, 3, 2], 3: [5, 3, 2], 4: [3, 3, 3], 5: [5, 3, 1.5], 6: [6, 3, 1.5], 7: [7, 2, 1.5], 8: [3, 3, 3], 9: [5, 2, 1], 10: [5, 1, 1.5], 11: [4, 1, 1] },
+  mu: { 1: [5, 1, 2], 2: [5, 1, 2], 3: [5, 1, 2], 4: [3, 1, 3], 5: [5, 1, 1.5], 6: [6, 1, 1.5], 7: [6, 1, 1], 8: [3, 1, 3], 9: [5, 1, 1], 10: [4, 1, 1], 11: [4, 1, .5] },
+  vol: { 1: [3, 5, 3], 2: [3, 5, 3], 3: [3, 5, 3], 4: [2, 5, 4], 5: [3, 5, 3], 6: [4, 5, 3], 7: [4, 4, 3], 8: [2, 5, 4], 9: [3, 4, 3], 10: [3, 3, 3], 11: [2, 3, 3] },
+  light: { 1: [4, 6, 4], 2: [4, 6, 4], 3: [4, 6, 4], 4: [3, 6, 5], 5: [4, 6, 4], 6: [4, 6, 4], 7: [4, 5, 4], 8: [3, 6, 5], 9: [3, 5, 4], 10: [3, 5, 4], 11: [3, 4, 4] },
+  sqvol: { 1: [4, 7, 3], 2: [4, 7, 3], 3: [4, 7, 3], 4: [3, 6, 4], 5: [4, 6, 3], 6: [5, 6, 3], 7: [5, 5, 3], 8: [3, 6, 4], 9: [3, 5, 3], 10: [3, 4, 3], 11: [2, 4, 3] }
+};
+// charge = base (dernier record + séances réussies) ramenée aux reps visées. Aucune progression supposée : ça ne monte que si tu valides.
+const loadTxt = (k, add) => LIFTS[k].bw ? (add <= 0 ? 'PDC' : '+' + fmt(add) + ' kg') : fmt(Math.max(20, add)) + ' kg';
+function prescribe(k, kind, w, date) {
+  const x = tm(k, date);
+  if (TEST_W[w] && (kind === 'force' || kind === 'mu')) {
+    const tr = kind === 'mu' ? 1 : TEST_W[w];
+    if (!x) return { b: 'TEST ' + tr + 'RM', s: '', test: tr };
+    const tgt = kind === 'mu' ? rnd(k, x.e - x.bw + 1.25) : rnd(k, x.e / (1 + (tr - 1) / 30) - x.bw);
+    return { b: 'TEST ' + tr + 'RM', s: 'vise ~' + loadTxt(k, tgt), test: tr };
+  }
+  const t = T[kind][w]; if (!t) return null;
+  const [s, r, rir] = t;
+  if (!x) return { b: s + ' × ' + r, s: '' };
+  // muscle-up : singles à ta charge max propre (un peu moins en deload)
+  const add = k === 'mu' ? rnd(k, x.e - x.bw - (isDeload(w) ? 2.5 : 0)) : rnd(k, x.e / (1 + (r + rir - 1) / 30) - x.bw);
+  return { b: s + ' × ' + r, s: loadTxt(k, add), kg: Math.max(0, add), reps: r, rir: k === 'mu' ? 0 : rir };
+}
+// skills : on reste au niveau du dernier record, c'est toi qui décides quand passer au suivant
+function skill(k) {
+  const r = latest(k), L = SKILLS[k].levels;
+  if (!r) return { i: 0, lvl: L[0], rx: { b: '5 × 5–10 s', s: L[0] }, txt: 'Commence au niveau ' + L[0] + ' et enregistre ton maintien dans Records.' };
+  const i = Math.min(+r.lvl, L.length - 1), t = +r.sec;
+  const lo = Math.max(3, Math.round(t * .45)), hi = Math.max(lo + 2, Math.round(t * .65));
+  const next = i < L.length - 1 ? L[i + 1] : null;
+  let txt = 'Record : ' + t + ' s en ' + L[i] + '. ';
+  if (next && t >= 25) txt += 'Tu peux commencer à tester ' + next + ' : dès que tu y tiens 3–5 s propres, enregistre-le dans Records et le programme passera à ce niveau.';
+  else txt += (next ? 'On reste à ce niveau jusqu’à ~25 s propres avant de viser ' + next + '. ' : '') + 'Si tu bats ton record sur la série max, note-le.';
+  return { i, lvl: L[i], rx: { b: '5 × ' + lo + '–' + hi + ' s', s: L[i] }, extra: { b: '1 × max', s: 'bats ton record' }, txt };
+}
+
+function session(dow, w, date) {
+  const P = (k, kind) => ({ main: true, k, kind, rx: prescribe(k, kind, w, date) });
+  switch (dow) {
+    case 1: {
+      const pl = skill('planche'); const h = latest('hspu'); const hs = latest('hs'); const hsBest = hs ? +hs.sec : 0;
+      return {
+        t: 'Planche + HSPU', place: '🏠 Maison', c: 'var(--skill)', items: [
+          { n: 'Échauffement poignets & épaules', d: '10 min : rotations de poignets, appui sur le dos des mains, scapula push-ups. Obligatoire.' },
+          { n: 'Planche — maintiens', d: pl.txt, rx: pl.rx, rx2: pl.extra, rec: 'planche' },
+          pl.i <= 2 ? { n: 'Préparation au niveau suivant', d: 'Depuis ton maintien, tends lentement une jambe 2–3 s puis reviens. Facultatif si tes poignets fatiguent.', rx: { b: '3 × 2/jambe', s: '' } } : null,
+          { n: 'Planche lean sur parallettes', d: 'Penche-toi le plus loin possible, bras tendus.', rx: { b: '3 × 15–20 s', s: '' } },
+          { n: 'Pseudo-planche push-ups', rx: { b: '4 × 6–8', s: '' } },
+          { n: 'Handstand libre', d: 'Record : ' + hsBest + ' s. Corps gainé, épaules ouvertes, sors proprement si tu tombes (roulade ou pas de côté).', rx: { b: '5 × ' + Math.max(10, Math.round(hsBest * .6 / 5) * 5) + '–' + Math.max(15, Math.round(hsBest * .8 / 5) * 5) + ' s', s: '' }, rec: 'hs' },
+          (!h || +h.reps === 0)
+            ? { n: 'Pike push-ups en déficit + négatives HSPU libres', d: 'Pikes mains sur parallettes, pieds surélevés (box/chaise), tête sous le niveau des mains. Puis négatives en équilibre libre : descente 4–5 s, amplitude partielle au début, et pose les pieds pour remonter.', rx: { b: '4 × 6–8 + 3 × 2', s: hsBest >= 20 ? '' : 'négatives quand HS > 20 s' }, rec: 'hspu' }
+            : { n: 'HSPU libre', d: 'Record : ' + h.reps + ' reps. Amplitude que tu contrôles, sans perdre l’équilibre.', rx: { b: '4 × ' + Math.max(1, Math.round(h.reps * .6)), s: '' }, rx2: { b: '3 × 2', s: 'négatives lentes' }, rec: 'hspu' },
+          { n: 'Hollow body', rx: { b: '3 × 20–30 s', s: '' } }
+        ]
+      };
+    }
+    case 2: {
+      const fl = skill('fl');
+      return {
+        t: 'Front lever + Tractions', place: '🏠 Maison', c: 'var(--skill)', note: 'Séance moyenne, jamais à l’échec : muscle-up lesté demain et tractions force samedi.', items: [
+          { n: 'Front lever — maintiens', d: fl.txt, rx: fl.rx, rx2: fl.extra, rec: 'fl' },
+          { n: 'Front lever raises', d: 'Au niveau juste en dessous de ton maintien.', rx: { b: '4 × 4–5', s: '' } },
+          { n: 'Négatives front lever', d: 'À ton niveau de maintien, descente lente (4–5 s) depuis la position renversée.', rx: { b: '3 × 3', s: '' } },
+          { n: 'Tractions strictes', d: 'Quand 4 × 8 passe proprement → tractions archer 4 × 3–4 par côté.', rx: { b: '4 × 6–8', s: '' } },
+          { n: 'Tractions lentes (5 s de descente)', d: 'Enlève-les en premier si tes coudes tirent.', rx: { b: '3 × 4', s: '' } },
+          { n: 'Relevés de jambes tendues suspendu', rx: { b: '3 × 8–10', s: '' } }
+        ]
+      };
+    }
+    case 3: return {
+      t: 'Full body fun', place: '🏋️ Salle', c: 'var(--acc)', note: 'Séance plaisir : le muscle-up en premier tant que tu es frais, puis un peu de tout sans aller à l’échec.', items: [
+        Object.assign({ n: 'Muscle-up lesté', d: 'Singles propres, repos 3 min. Si tu dois kipper fort ou qu’une rep est sale, c’est « Raté » : on garde la charge.' }, P('mu', 'mu')),
+        { n: 'Muscle-up PDC enchaînés', d: 'Explosifs et propres, arrête 1 rep avant que ça se dégrade.', rx: { b: '3 × 2–3', s: '' } },
+        Object.assign({ n: 'Tractions lestées — volume' }, P('tractions', 'vol')),
+        Object.assign({ n: 'Dips lestés — volume léger' }, P('dips', 'light')),
+        Object.assign({ n: 'Squat barre — volume', d: 'Plus léger que vendredi, descente contrôlée.' }, P('squat', 'sqvol')),
+        { n: 'Circuit fun ou freestyle', d: '3 tours : 5 tractions explosives · 8 dips · 10 squats sautés · 15 s de L-sit. Ou 10 min de freestyle : handstand, combos à la barre, ce qui te fait plaisir.', rx: { b: '3 tours / 10 min', s: '' } }
+      ]
+    };
+    case 4: return null;
+    case 5: return {
+      t: 'Dips force + Squat force', place: '🏋️ Salle', c: 'var(--push)', items: [
+        Object.assign({ n: 'Dips lestés — force', d: 'Repos 3–4 min. 1–2 reps en réserve.' }, P('dips', 'force')),
+        w === 12 ? null : Object.assign({ n: 'Squat barre — force', d: 'Repos 3–4 min. Même profondeur à chaque rep.' }, P('squat', 'force')),
+        Object.assign({ n: 'Dips lestés — volume', d: 'Plus léger, technique parfaite.' }, P('dips', 'vol')),
+        { n: 'Romanian deadlift', rx: { b: '3 × 6', s: '' } },
+        { n: 'Développé incliné haltères', rx: { b: '3 × 8', s: '' } },
+        { n: 'Extension triceps poulie', rx: { b: '3 × 10', s: '' } }
+      ]
+    };
+    case 6: return {
+      t: 'Tractions force + Dos & bras', place: '🏋️ Salle', c: 'var(--pull)', items: [
+        Object.assign({ n: 'Tractions lestées — force', d: 'Repos 3–4 min. 1–2 reps en réserve.' }, P('tractions', 'force')),
+        { n: 'Tractions explosives poitrine-barre', rx: { b: '3 × 3', s: '' } },
+        { n: 'Rowing barre', rx: { b: '4 × 8', s: '' } },
+        { n: 'Face pulls', rx: { b: '3 × 12', s: '' } },
+        { n: 'Curl incliné', rx: { b: '3 × 8', s: '' } },
+        { n: 'Élévations latérales', rx: { b: '4 × 12', s: '' } },
+        { n: 'Abdos', rx: { b: '3 séries', s: '' } }
+      ]
+    };
+    case 0: return {
+      t: w === 12 ? 'Test squat + Physique' : 'Physique + Jambes', place: '🏋️ Salle', c: 'var(--legs)', note: w === 12 ? '' : 'Pas de record aujourd’hui : séance pour le physique et les jambes, à 2 reps de l’échec.', items: [
+        w === 12 ? Object.assign({ n: 'Squat barre' }, P('squat', 'force')) : null,
+        { n: 'Technique muscle-up PDC', d: 'Facile et propre, pas à l’échec.', rx: { b: '4 × 2', s: '' } },
+        { n: 'Développé incliné haltères', rx: { b: '4 × 8', s: '' } },
+        { n: 'Développé épaules', rx: { b: '3 × 8', s: '' } },
+        { n: 'Pistol squat', d: 'Lesté avec un haltère seulement si le pistol PDC est parfait.', rx: { b: '3 × 4/jambe', s: '' } },
+        { n: 'Bulgarian split squat', rx: { b: '3 × 8/jambe', s: '' } },
+        { n: 'Leg curl (ischios)', rx: { b: '3 × 10', s: '' } },
+        { n: 'Mollets', rx: { b: '4 × 12–15', s: '' } },
+        { n: 'Triceps poulie + unilatéral', rx: { b: '2 × 8 + 2 × 12/bras', s: '' } }
+      ]
+    };
+  }
+}
+function nextRx(it, date) {
+  const w = clampW(weekOf(date)); if (w >= 12) return null;
+  const nd = addDays(date, 7), nw = clampW(weekOf(nd));
+  if (TEST_W[nw] && (it.kind === 'force' || it.kind === 'mu')) return 'test ' + (it.kind === 'mu' ? 1 : TEST_W[nw]) + 'RM 🏆';
+  const r = prescribe(it.k, it.kind, nw, nd); if (!r) return null;
+  return r.b + (r.s ? ' · ' + r.s : '') + (isDeload(nw) ? ' (deload)' : '');
+}
+function getSession(date) {
+  const w = clampW(weekOf(date)), s = session(parse(date).getDay(), w, date);
+  if (!s) return null;
+  s.items = s.items.filter(i => i && i.rx !== null);
+  s.items.forEach(i => {
+    if (i.main && i.rx && i.rx.test) {
+      const tr = i.rx.test;
+      i.n = i.n.replace(/ — .*/, '') + ' — TEST ' + tr + 'RM';
+      i.d = (tr === 1
+        ? 'Échauffe-toi par paliers (5 → 3 → 2 → 1 rep), puis 3 à 5 essais à 1 rep, 4–5 min de repos. Entre ta meilleure rep propre dans Records avec réserve « Échec ».'
+        : 'Échauffe-toi par paliers, puis monte jusqu’à la charge max pour ' + tr + ' reps propres (3–4 essais, 4–5 min de repos). Entre-la dans Records avec réserve « Échec » : tout le programme se recale dessus.')
+        + (i.k === 'squat' ? ' Règle les barres de sécurité ou demande à quelqu’un de te parer.' : '');
+    }
+  });
+  if (s.items.some(i => i.main && i.rx && i.rx.test)) s.test = true;
+  return s;
+}
+const isTrainingDay = date => parse(date).getDay() !== 4;
+
+/* ============ UI state ============ */
+let tab = 'today', viewDate = todayISO(), progWeek = null, statSel = 'dips', chart = null, armed = null;
+
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 1800); }
+function header(eyebrow, title) { $('#eyebrow').textContent = eyebrow; $('#title').textContent = title; }
+function weekLabel(date) {
+  const w = weekOf(date);
+  if (w < 1) return 'Début le ' + nice(S.start).toLowerCase();
+  if (w > 12) return 'Programme terminé 🏁';
+  return 'Semaine ' + w + ' · ' + phaseName(w);
+}
+
+/* ============ TODAY ============ */
+function renderToday() {
+  const w = weekOf(viewDate), s = getSession(viewDate), isToday = viewDate === todayISO();
+  header(weekLabel(viewDate), isToday ? 'Aujourd’hui' : DNAME[parse(viewDate).getDay()]);
+  let h = `<div class="dnav"><button id="prev">‹</button><div class="mid"><b>${nice(viewDate)}</b><span>${isToday ? 'Aujourd’hui' : '<a href="#" id="goToday" style="color:var(--acc2)">Revenir à aujourd’hui</a>'}</span></div><button id="next">›</button></div>`;
+  if (!s) {
+    h += `<div class="card rest"><div class="big">💤</div><h2 style="margin-top:8px">Repos</h2><p class="muted small" style="line-height:1.5">Vrai repos : pas de dips, tractions ou muscle-up lourds.<br>Marche, un peu de mobilité, mange bien et dors 8–9 h.</p></div>`;
+  } else {
+    const chk = S.chk[viewDate] || [], done = !!S.done[viewDate];
+    let banner = '';
+    if (w < 1) banner = 'Le programme commence le ' + nice(S.start).toLowerCase() + ' Voici un aperçu de la semaine 1.';
+    else if (s.test) banner = (w === 12 ? '🏆 Jour de test final. ' : '🏆 Jour de test : ton nouveau PR sert à recaler les charges des semaines suivantes. ') + 'Fais le test en premier, bien frais. Le reste de la séance est facultatif et léger.';
+    else if (isDeload(w)) banner = 'Semaine de deload : charges un peu plus légères (déjà calculées) et ~1/3 de séries en moins sur les exercices secondaires.';
+    else if (w === 12) banner = 'Semaine test : exercices secondaires facultatifs et légers. Ne teste pas tout lourd le même jour.';
+    else if (w > 12) banner = 'Les 12 semaines sont finies. Entre tes nouveaux records et redémarre un cycle dans les réglages (Records).';
+    if (s.note) banner += (banner ? '<br><br>' : '') + s.note;
+    h += `<div class="card sess" style="--c:${s.test ? 'var(--acc2)' : s.c}"><div class="sess-h"><div><div class="place">${s.place}</div><h2>${s.t}</h2></div><span class="pill">${chk.length}/${s.items.length}</span></div>`;
+    if (banner) h += `<div class="banner">${banner}</div>`;
+    s.items.forEach((it, i) => {
+      const on = chk.includes(i);
+      h += `<div class="ex${on ? ' done' : ''}"><button class="chk${on ? ' on' : ''}" data-i="${i}" aria-label="Fait"></button><div class="exb"><div class="exn">${esc(it.n)}</div>${it.d ? `<div class="exd">${esc(it.d)}</div>` : ''}`;
+      if (it.rx) h += `<div class="rx"><b>${esc(it.rx.b)}</b>${it.rx.s ? `<span>${esc(it.rx.s)}</span>` : ''}</div>`;
+      if (it.rx2) h += ` <div class="rx"><b>${esc(it.rx2.b)}</b>${it.rx2.s ? `<span>${esc(it.rx2.s)}</span>` : ''}</div>`;
+      const rk = it.main ? it.k : it.rec;
+      if (rk) h += `<button class="mini" data-rec="${rk}">＋ Record</button>`;
+      if (it.main && (it.kind === 'force' || it.kind === 'mu') && !it.rx.test && w >= 1 && w <= 11 && !isDeload(w) && viewDate <= todayISO()) {
+        const o = (S.out[viewDate] || {})[it.k], nx = nextRx(it, viewDate);
+        h += `<div class="oc"><button class="ocb ok${o && o.ok === 1 ? ' on' : ''}" data-oc="${i}" data-v="1">✓ Réussi</button><button class="ocb ko${o && o.ok === 0 ? ' on' : ''}" data-oc="${i}" data-v="0">✗ Raté</button></div>`;
+        const msg = !o ? 'Toutes les séries propres → « Réussi » : la base monte de ' + fmt(STEP[it.k]) + ' kg. Sinon « Raté » : la semaine prochaine reste sur la même base.'
+          : (o.ok === 1 ? 'Validé 💪 ' : 'On garde la même base. ') + (nx ? 'Semaine prochaine : ' + nx : '');
+        h += `<div class="exd" style="margin-top:8px">${esc(msg)}</div>`;
+      }
+      h += `</div></div>`;
+    });
+    h += `<button class="donebtn${done ? ' is' : ''}" id="doneBtn">${done ? '✓ Séance validée' : 'Valider la séance'}</button></div>`;
+  }
+  h += calendarHTML();
+  $('#view').innerHTML = h;
+  $('#prev').onclick = () => { viewDate = addDays(viewDate, -1); render(); };
+  $('#next').onclick = () => { viewDate = addDays(viewDate, 1); render(); };
+  const gt = $('#goToday'); if (gt) gt.onclick = e => { e.preventDefault(); viewDate = todayISO(); render(); };
+  document.querySelectorAll('.chk').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i, a = (S.chk[viewDate] || []).slice(), p = a.indexOf(i);
+    p >= 0 ? a.splice(p, 1) : a.push(i);
+    S.chk[viewDate] = a;
+    if (s && a.length === s.items.length && !S.done[viewDate]) { S.done[viewDate] = true; toast('Séance complète 🔥'); }
+    persist(); render();
+  });
+  document.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => openRec(b.dataset.rec));
+  document.querySelectorAll('[data-oc]').forEach(b => b.onclick = () => {
+    const idx = +b.dataset.oc, it = s.items[idx], v = +b.dataset.v, day = Object.assign({}, S.out[viewDate] || {});
+    if (day[it.k] && day[it.k].ok === v) delete day[it.k];
+    else {
+      day[it.k] = { ok: v, kg: it.rx.kg, reps: it.rx.reps, rir: it.rx.rir, b: it.rx.b };
+      const a = (S.chk[viewDate] || []).slice(); if (!a.includes(idx)) a.push(idx); S.chk[viewDate] = a;
+      toast(v ? 'Réussi 💪 La charge monte la semaine prochaine' : 'Noté : même base la semaine prochaine');
+    }
+    if (Object.keys(day).length) S.out[viewDate] = day; else delete S.out[viewDate];
+    persist(); render();
+  });
+  const db = $('#doneBtn');
+  if (db) db.onclick = () => {
+    if (S.done[viewDate]) delete S.done[viewDate];
+    else { S.done[viewDate] = true; toast('Séance validée 💪'); }
+    persist(); render(); const nb = $('#doneBtn'); if (nb) nb.classList.add('pop');
+  };
+  document.querySelectorAll('.cal .d[data-d]').forEach(b => b.onclick = () => { viewDate = b.dataset.d; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+}
+function calendarHTML() {
+  const t = todayISO();
+  let h = `<div class="card"><div class="row between"><h3 style="margin:0">Les 12 semaines</h3><span class="small muted">${countDone()} / 72 séances</span></div><div class="cal" style="margin-top:12px"><div></div>`;
+  ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach(l => h += `<div class="lbl">${l}</div>`);
+  for (let w = 0; w < 12; w++) {
+    h += `<div class="lbl" style="${isDeload(w + 1) ? 'color:#7fa6ff' : TEST_W[w + 1] ? 'color:var(--acc2)' : ''}">S${w + 1}</div>`;
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(S.start, w * 7 + d);
+      let cls = 'd';
+      if (isDeload(w + 1)) cls += ' dl';
+      if (isTestDay(date)) cls += ' test';
+      if (d === 3) cls += ' rest';
+      else if (S.done[date]) cls += ' done';
+      else if (date < t) cls += ' miss';
+      if (date === t) cls += ' today';
+      if (date === viewDate && date !== t) cls += ' sel';
+      h += `<button class="${cls}" data-d="${date}" aria-label="${date}"></button>`;
+    }
+  }
+  h += `</div><div class="legend"><span><i style="background:linear-gradient(135deg,var(--acc),var(--acc2))"></i>Faite</span><span><i style="background:#2c1a20"></i>Manquée</span><span><i style="border:1px dashed #2b3242"></i>Repos</span><span><i style="box-shadow:inset 0 0 0 2px var(--acc2)"></i>Test PR</span><span><i style="background:#18233d"></i>Deload</span></div></div>`;
+  return h;
+}
+function countDone() {
+  let n = 0; for (let i = 0; i < 84; i++) { const d = addDays(S.start, i); if (isTrainingDay(d) && S.done[d]) n++; } return n;
+}
+function streak() {
+  let n = 0, d = todayISO();
+  if (!S.done[d]) d = addDays(d, -1);
+  for (let i = 0; i < 400; i++) {
+    if (!isTrainingDay(d)) { d = addDays(d, -1); continue; }
+    if (S.done[d]) { n++; d = addDays(d, -1); } else break;
+  }
+  return n;
+}
+
+/* ============ PROGRAMME ============ */
+function renderProg() {
+  const cw = weekOf(todayISO());
+  if (progWeek === null) progWeek = clampW(cw);
+  header('Programme complet', 'Semaine ' + progWeek);
+  let h = `<div class="chips">`;
+  for (let w = 1; w <= 12; w++) h += `<button class="chip${w === progWeek ? ' on' : ''}${w === cw ? ' cur' : ''}" data-w="${w}">S${w}${isDeload(w) ? ' 💤' : TEST_W[w] ? ' 🏆' : ''}</button>`;
+  h += `</div><div class="card"><div class="row between"><b>${phaseName(progWeek)}</b><span class="small muted">${short(addDays(S.start, (progWeek - 1) * 7))} → ${short(addDays(S.start, (progWeek - 1) * 7 + 6))}</span></div><div class="phase">`;
+  for (let w = 1; w <= 12; w++) h += `<div class="${phaseCls(w)}${w === progWeek ? ' on' : ''}"></div>`;
+  h += `</div><div class="small muted" style="line-height:1.5">${phaseInfo(progWeek)}</div></div>`;
+  h += keyDatesHTML();
+  for (let d = 0; d < 7; d++) {
+    const date = addDays(S.start, (progWeek - 1) * 7 + d), s = getSession(date), dn = DNAME[parse(date).getDay()];
+    if (!s) { h += `<details class="day" style="--c:#3b4255"><summary><div class="bar"></div><div><div class="t1">${dn} · Repos</div><div class="t2">Récupération complète</div></div></summary></details>`; continue; }
+    h += `<details class="day" style="--c:${s.c}"${date === todayISO() ? ' open' : ''}><summary><div class="bar"></div><div><div class="t1">${dn} · ${s.t}</div><div class="t2">${s.place}${S.done[date] ? ' · ✓ faite' : ''}</div></div><span class="chev">›</span></summary><div class="body">`;
+    s.items.forEach(it => { h += `<div class="pex"><span>${esc(it.n)}</span><span class="r">${it.rx ? esc(it.rx.b) : ''}${it.rx && it.rx.s ? `<em>${esc(it.rx.s)}</em>` : ''}${it.rx2 ? `<em>+ ${esc(it.rx2.b)} ${esc(it.rx2.s)}</em>` : ''}</span></div>`; });
+    h += `</div></details>`;
+  }
+  h += `<div class="card small muted" style="line-height:1.6"><b style="color:var(--txt)">Comment les charges s'adaptent</b><br>Tout part de ton 1RM estimé (ton dernier record).<br>• Séance force « Réussi » → +1,25 kg la semaine suivante (dips, tractions, muscle-up), +2,5 kg au squat.<br>• « Raté » → la semaine suivante reste sur la même base.<br>• Nouveau record dans Records, quand tu veux → tout le programme se recale dessus.<br>Les semaines à venir affichent ta base actuelle : elles montent au fur et à mesure que tu valides. En phase Force, les séries montent (5 → 6 → 7) pendant que les reps baissent.</div>`;
+  $('#view').innerHTML = h;
+  document.querySelectorAll('.chip[data-w]').forEach(b => b.onclick = () => { progWeek = +b.dataset.w; render(); });
+}
+function keyDatesHTML() {
+  const wk = w => short(addDays(S.start, (w - 1) * 7)) + ' → ' + short(addDays(S.start, (w - 1) * 7 + 6));
+  const day = (w, d) => short(addDays(S.start, (w - 1) * 7 + d));
+  const tst = w => 'S' + w + ' · muscle-up mer. ' + day(w, 2) + ' · dips + squat ven. ' + day(w, 4) + ' · tractions sam. ' + day(w, 5);
+  const rows = [
+    ['💤', 'Deload 1', 'S4 · ' + wk(4), '#7fa6ff'],
+    ['🏆', 'Test 3RM', tst(5), 'var(--acc2)'],
+    ['💤', 'Deload 2', 'S8 · ' + wk(8), '#7fa6ff'],
+    ['🏆', 'Test 2RM', tst(9), 'var(--acc2)'],
+    ['🏆', 'Test final 1RM', 'S12 · muscle-up mer. ' + day(12, 2) + ' · dips ven. ' + day(12, 4) + ' · tractions sam. ' + day(12, 5) + ' · squat dim. ' + day(12, 6), 'var(--acc2)']
+  ];
+  let h = `<div class="card"><h3>Dates clés du cycle</h3>`;
+  rows.forEach(([ic, t, d, c]) => { h += `<div class="row" style="padding:9px 0;border-top:1px solid var(--line);align-items:flex-start"><span style="font-size:18px;width:26px">${ic}</span><div><b style="color:${c}">${t}</b><div class="small muted" style="margin-top:2px;line-height:1.4">${d}</div></div></div>`; });
+  h += `<p class="small muted" style="line-height:1.5;margin:10px 0 0">Le muscle-up se teste toujours en 1RM. Après chaque test, entre ton PR dans Records (réserve « Échec ») : les charges des semaines suivantes se recalent dessus.</p></div>`;
+  return h;
+}
+function phaseInfo(w) {
+  if (w <= 3) return 'Mouvements principaux en 5 × 3 avec 1–2 reps en réserve. Chaque séance force réussie = +1,25 kg la semaine suivante (+2,5 kg au squat).';
+  if (isDeload(w)) return 'Deload : −30 à 40 % de séries et charges un peu plus légères. Pas de validation cette semaine : tu dois ressortir avec l’envie de charger lourd.';
+  if (w === 5) return 'Début du bloc Force avec les tests 3RM : muscle-up mercredi, dips + squat vendredi, tractions samedi. Tes PR recalent toutes les charges.';
+  if (w === 9) return 'Début de l’intensification avec les tests 2RM : muscle-up mercredi, dips + squat vendredi, tractions samedi.';
+  if (w <= 7) return 'Force : plus de séries, moins de reps, charges plus lourdes. Si une séance ne passe pas, la base ne monte pas.';
+  if (w <= 11) return 'Intensification : singles lourds pour préparer le 1RM. Les exercices secondaires passent au second plan.';
+  return 'Test final 1RM : muscle-up mercredi, dips vendredi, tractions samedi, squat dimanche. Jamais tout lourd le même jour.';
+}
+
+/* ============ RECORDS ============ */
+function recLine(k, r) {
+  if (LIFTS[k]) return (LIFTS[k].bw ? (+r.kg > 0 ? '+' + fmt(r.kg) + ' kg' : 'PDC') : fmt(r.kg) + ' kg') + ' × ' + r.reps + (r.rir ? ' <span class="muted">(réserve ' + r.rir + ')</span>' : '');
+  if (k === 'hspu') return r.reps + ' reps';
+  if (k === 'hs') return r.sec + ' s';
+  if (k === 'bw') return fmt(r.kg) + ' kg';
+  return SKILLS[k].levels[r.lvl] + ' · ' + r.sec + ' s';
+}
+function histHTML(k, arr) {
+  const a = sorted(arr).reverse();
+  if (!a.length) return '<div class="small muted" style="margin-top:8px">Aucun enregistrement.</div>';
+  return `<details style="margin-top:8px"><summary class="small muted" style="cursor:pointer">Historique (${a.length})</summary><div class="hist">` +
+    a.map(r => `<div class="h"><span>${short(r.d)}</span><span>${recLine(k, r)}</span><button class="x${armed === k + r.d + (r.kg ?? r.sec ?? r.reps) ? ' arm' : ''}" data-del="${k}|${r.d}|${r.kg ?? ''}|${r.reps ?? ''}|${r.sec ?? ''}">${armed === k + r.d + (r.kg ?? r.sec ?? r.reps) ? 'Supprimer ?' : '✕'}</button></div>`).join('') + `</div></details>`;
+}
+function renderRec() {
+  header('Tes perfs', 'Records');
+  let h = `<button class="btn pri full" id="addRec" style="margin-bottom:14px;padding:15px">＋ Ajouter un record</button>`;
+  for (const k in LIFTS) {
+    const L = LIFTS[k], r = latest(k), x = tm(k), ea = x ? x.e - x.bw : null, sg = L.bw ? '+' : '';
+    const goalPct = L.goal && ea !== null ? Math.max(2, Math.min(100, ea / L.goal * 100)) : null;
+    h += `<div class="card" style="--c:${L.c}"><div class="rec-h"><div><h3 style="margin-bottom:4px"><span class="dot" style="display:inline-block;margin-right:6px"></span>${L.name}</h3><div class="rec-big">${r ? recLine(k, r).replace(/<span.*<\/span>/, '') : '—'}</div></div><button class="mini" data-rec="${k}">＋</button></div>`;
+    if (ea !== null) h += `<div class="small muted" style="margin-top:4px">1RM estimé : <b style="color:var(--txt)">${L.bw && ea < 0 ? '' : sg}${fmt(rnd(k, ea))} kg</b>${L.goal ? ' · objectif ' + sg + L.goal + ' kg' : ''}</div>`;
+    if (x && x.n) h += `<div class="small" style="margin-top:4px;color:var(--legs)">+${fmt(x.n * STEP[k])} kg gagnés : ${x.n} séance${x.n > 1 ? 's' : ''} force validée${x.n > 1 ? 's' : ''} depuis ce record</div>`;
+    if (goalPct !== null) h += `<div class="goal"><div style="width:${goalPct}%"></div></div>`;
+    h += histHTML(k, S.rec[k]) + `</div>`;
+  }
+  // skills
+  for (const k of ['planche', 'fl']) {
+    const r = latest(k), sk = skill(k);
+    h += `<div class="card" style="--c:var(--skill)"><div class="rec-h"><div><h3 style="margin-bottom:4px">${SKILLS[k].name}</h3><div class="rec-big">${r ? SKILLS[k].levels[r.lvl] + ' <small>' + r.sec + ' s</small>' : '—'}</div></div><button class="mini" data-rec="${k}">＋</button></div><div class="small muted" style="margin-top:4px">${esc(sk.txt)}</div>${histHTML(k, S.rec[k])}</div>`;
+  }
+  const hsr = latest('hs');
+  h += `<div class="card"><div class="rec-h"><div><h3 style="margin-bottom:4px">Handstand libre</h3><div class="rec-big">${hsr ? hsr.sec + ' <small>s</small>' : '—'}</div></div><button class="mini" data-rec="hs">＋</button></div>${histHTML('hs', S.rec.hs)}</div>`;
+  const hr = latest('hspu');
+  h += `<div class="card"><div class="rec-h"><div><h3 style="margin-bottom:4px">Handstand push-up</h3><div class="rec-big">${hr ? hr.reps + ' <small>reps</small>' : '—'}</div></div><button class="mini" data-rec="hspu">＋</button></div>${histHTML('hspu', S.rec.hspu)}</div>`;
+  const bw = curBW();
+  h += `<div class="card" style="--c:var(--acc2)"><div class="rec-h"><div><h3 style="margin-bottom:4px">Poids de corps</h3><div class="rec-big">${fmt(bw)} <small>kg · objectif ${BW_GOAL} kg</small></div></div><button class="mini" data-rec="bw">＋</button></div><div class="goal"><div style="width:${Math.max(2, Math.min(100, (bw - BW_START) / (BW_GOAL - BW_START) * 100))}%"></div></div>${histHTML('bw', S.bw)}</div>`;
+  // settings
+  h += `<div class="card"><h3>Réglages</h3><label>Début du programme (un lundi)</label><input type="date" id="startIn" value="${S.start}">
+  <div class="grid2" style="margin-top:12px"><button class="btn" id="exp">Copier sauvegarde</button><button class="btn" id="imp">Importer</button></div>
+  <div id="impBox" style="display:none"><label>Colle ta sauvegarde ici</label><textarea id="impTxt" rows="4"></textarea><button class="btn pri full" id="impGo" style="margin-top:10px">Restaurer</button></div>
+  <button class="btn full danger" id="newCycle" style="margin-top:10px">${armed === 'cycle' ? 'Confirmer : nouveau cycle dès lundi prochain' : 'Démarrer un nouveau cycle'}</button>
+  <p class="small muted" style="line-height:1.5;margin:12px 0 0">Tes données sont enregistrées sur ce téléphone uniquement. Fais « Copier sauvegarde » de temps en temps et colle le texte dans tes notes : c'est ta copie de secours. « Importer » permet de la restaurer.</p></div>`;
+  $('#view').innerHTML = h;
+  $('#addRec').onclick = () => openRec('dips');
+  document.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => openRec(b.dataset.rec));
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const [k, d, kg, reps, sec] = b.dataset.del.split('|');
+    const arr = k === 'bw' ? S.bw : S.rec[k];
+    const key = k + d + (kg !== '' ? kg : sec !== '' ? sec : reps);
+    if (armed !== key) { armed = key; render(); openDetails(k); return; }
+    const i = arr.findIndex(r => r.d === d && String(r.kg ?? '') === kg && String(r.reps ?? '') === reps && String(r.sec ?? '') === sec);
+    if (i >= 0) { if (k === 'bw' && arr.length === 1) { toast('Garde au moins un poids'); } else arr.splice(i, 1); }
+    armed = null; persist(); render(); openDetails(k);
+  });
+  $('#startIn').onchange = e => { if (e.target.value) { S.start = e.target.value; persist(); toast('Date de début mise à jour'); } };
+  $('#exp').onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(S)); toast('Sauvegarde copiée 📋'); } catch (e) { toast('Copie impossible ici'); } };
+  $('#imp').onclick = () => { $('#impBox').style.display = 'block'; };
+  $('#impGo').onclick = () => { try { S = norm(JSON.parse($('#impTxt').value)); persist(); toast('Données restaurées'); render(); } catch (e) { toast('Sauvegarde invalide'); } };
+  $('#newCycle').onclick = () => {
+    if (armed !== 'cycle') { armed = 'cycle'; render(); return; }
+    const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); S.start = iso(d);
+    armed = null; persist(); toast('Nouveau cycle le ' + nice(S.start).toLowerCase()); render();
+  };
+}
+function openDetails(k) {
+  document.querySelectorAll('[data-del^="' + k + '|"]').forEach(b => { const dt = b.closest('details'); if (dt) dt.open = true; });
+}
+
+/* ============ record sheet ============ */
+let form = {};
+function openRec(k) {
+  form = { k, d: todayISO(), kg: '', reps: '', rir: k === 'mu' ? 0 : 2, lvl: 0, sec: '' };
+  const r = k === 'bw' ? null : latest(k);
+  if (r) { if (r.kg !== undefined) form.kg = r.kg; if (r.reps !== undefined) form.reps = r.reps; if (r.lvl !== undefined) form.lvl = r.lvl; }
+  if (k === 'bw') form.kg = curBW();
+  drawSheet(); $('#sheet').classList.remove('hidden');
+}
+function closeSheet() { $('#sheet').classList.add('hidden'); }
+function drawSheet() {
+  const k = form.k;
+  const types = [['dips', 'Dips'], ['tractions', 'Tractions'], ['mu', 'Muscle-up'], ['squat', 'Squat'], ['planche', 'Planche'], ['fl', 'Front lever'], ['hs', 'Handstand'], ['hspu', 'HSPU'], ['bw', 'Poids']];
+  let h = `<div class="grab"></div><h2>Nouveau record</h2><div class="chips">` + types.map(([v, l]) => `<button class="chip${v === k ? ' on' : ''}" data-t="${v}">${l}</button>`).join('') + `</div>`;
+  h += `<label>Date</label><input type="date" id="fD" value="${form.d}">`;
+  if (LIFTS[k]) {
+    h += `<div class="grid2"><div><label>${LIFTS[k].bw ? 'Lest (kg)' : 'Charge barre (kg)'}</label><input type="number" inputmode="decimal" step="0.25" id="fKg" value="${form.kg}"></div><div><label>Reps</label><input type="number" inputmode="numeric" id="fReps" value="${form.reps}"></div></div>
+    <label>Reps encore en réserve à la fin de la série</label><div class="seg" id="fRir">${[0, 1, 2, 3].map(v => `<button class="${+form.rir === v ? 'on' : ''}" data-v="${v}">${v === 0 ? 'Échec' : v}</button>`).join('')}</div>
+    <p class="small muted" style="line-height:1.45">${k === 'mu' ? 'Entre ta charge max sur une rep propre : 1 rep, réserve « Échec ».' : 'Ex. 5 × 3 à +35 kg avec ~2 reps en réserve → lest 35, reps 3, réserve 2. Pour un vrai 1RM : 1 rep, réserve « Échec ».'} Le programme se recale dessus tout de suite.</p>`;
+  } else if (SKILLS[k]) {
+    h += `<label>Niveau</label><select id="fLvl">${SKILLS[k].levels.map((l, i) => `<option value="${i}"${+form.lvl === i ? ' selected' : ''}>${l}</option>`).join('')}</select><label>Meilleur maintien propre (secondes)</label><input type="number" inputmode="numeric" id="fSec" value="${form.sec}">`;
+  } else if (k === 'hs') {
+    h += `<label>Meilleur handstand libre (secondes)</label><input type="number" inputmode="numeric" id="fSec" value="${form.sec}">`;
+  } else if (k === 'hspu') {
+    h += `<label>Reps propres (0 si pas encore)</label><input type="number" inputmode="numeric" id="fReps" value="${form.reps}">`;
+  } else {
+    h += `<label>Poids au réveil (kg)</label><input type="number" inputmode="decimal" step="0.1" id="fKg" value="${form.kg}">`;
+  }
+  h += `<div class="grid2" style="margin-top:18px"><button class="btn" id="fCancel">Annuler</button><button class="btn pri" id="fSave">Enregistrer</button></div>`;
+  $('#sheetCard').innerHTML = h;
+  const grab = () => {
+    const g = id => { const e = $('#' + id); return e ? e.value : undefined; };
+    if (g('fD') !== undefined) form.d = g('fD');
+    if (g('fKg') !== undefined) form.kg = g('fKg');
+    if (g('fReps') !== undefined) form.reps = g('fReps');
+    if (g('fSec') !== undefined) form.sec = g('fSec');
+    if (g('fLvl') !== undefined) form.lvl = g('fLvl');
+  };
+  document.querySelectorAll('#sheetCard .chip[data-t]').forEach(b => b.onclick = () => { grab(); const d = form.d; openRec(b.dataset.t); form.d = d; drawSheet(); });
+  document.querySelectorAll('#fRir button').forEach(b => b.onclick = () => { grab(); form.rir = +b.dataset.v; drawSheet(); });
+  $('#fCancel').onclick = closeSheet;
+  $('#fSave').onclick = () => {
+    grab();
+    const num = v => parseFloat(String(v).replace(',', '.'));
+    const d = form.d || todayISO();
+    if (LIFTS[k]) {
+      const kg = num(form.kg), reps = parseInt(form.reps);
+      if (isNaN(kg) || !(reps > 0)) return toast('Remplis la charge et les reps');
+      S.rec[k].push({ d, kg, reps, rir: +form.rir });
+    } else if (SKILLS[k]) {
+      const sec = parseInt(form.sec); if (!(sec > 0)) return toast('Indique le maintien en secondes');
+      S.rec[k].push({ d, lvl: +form.lvl, sec });
+    } else if (k === 'hs') {
+      const sec = parseInt(form.sec); if (!(sec > 0)) return toast('Indique tes secondes');
+      S.rec.hs.push({ d, sec });
+    } else if (k === 'hspu') {
+      const reps = parseInt(form.reps); if (isNaN(reps) || reps < 0) return toast('Indique tes reps');
+      S.rec.hspu.push({ d, reps });
+    } else {
+      const kg = num(form.kg); if (!(kg > 30)) return toast('Poids invalide');
+      S.bw.push({ d, kg });
+    }
+    persist(); closeSheet(); toast('Enregistré 💪 Programme recalé'); render();
+  };
+}
+$('#sheetBg').onclick = closeSheet;
+
+/* ============ STATS ============ */
+function seriesFor(k) {
+  if (LIFTS[k]) {
+    const bw = LIFTS[k].bw ? curBW() : 0, pts = [];
+    S.rec[k].forEach(r => pts.push({ d: r.d, y: recE(k, r, bw) - bw, lab: recLine(k, r).replace(/<[^>]+>/g, '') }));
+    for (const d in S.out) { const o = S.out[d] && S.out[d][k]; if (o && o.ok === 1 && o.kg !== undefined) pts.push({ d, y: recE(k, o, bw) - bw, lab: '✓ ' + o.b + ' · ' + loadTxt(k, o.kg) }); }
+    return sorted(pts).map(p => { p.y = Math.round(p.y * 10) / 10; return p; });
+  }
+  if (k === 'bw') return sorted(S.bw).map(r => ({ d: r.d, y: +r.kg, lab: fmt(r.kg) + ' kg' }));
+  if (k === 'hs') return sorted(S.rec.hs).map(r => ({ d: r.d, y: +r.sec, lab: r.sec + ' s' }));
+  if (k === 'hspu') return sorted(S.rec.hspu).map(r => ({ d: r.d, y: +r.reps, lab: r.reps + ' reps' }));
+  return sorted(S.rec[k]).map(r => ({ d: r.d, y: +r.lvl * 20 + Math.min(+r.sec, 20), lab: SKILLS[k].levels[r.lvl] + ' · ' + r.sec + ' s' }));
+}
+function renderStats() {
+  header('Ta progression', 'Progrès');
+  const sel = [['dips', 'Dips'], ['tractions', 'Tractions'], ['mu', 'Muscle-up'], ['squat', 'Squat'], ['bw', 'Poids'], ['planche', 'Planche'], ['fl', 'Front lever'], ['hs', 'Handstand'], ['hspu', 'HSPU']];
+  const startBW = sorted(S.bw)[0].kg;
+  let h = `<div class="stats" style="margin-bottom:14px"><div class="stat"><b>${countDone()}</b><span>séances faites</span></div><div class="stat"><b>${streak()}🔥</b><span>série en cours</span></div><div class="stat"><b>${(curBW() - startBW >= 0 ? '+' : '') + fmt(Math.round((curBW() - startBW) * 10) / 10)}</b><span>kg pris</span></div></div>`;
+  h += `<div class="card"><div class="chips">` + sel.map(([v, l]) => `<button class="chip${v === statSel ? ' on' : ''}" data-s="${v}">${l}</button>`).join('') + `</div><div class="chartwrap"><canvas id="cv"></canvas></div><div class="small muted" id="cvNote" style="margin-top:10px;line-height:1.45"></div></div>`;
+  h += `<div class="card"><h3>Objectifs 1RM</h3><div class="small muted">Ton 1RM estimé par rapport à ton objectif</div>`;
+  for (const k of ['dips', 'tractions', 'mu', 'squat']) {
+    const ea = e1rmAdded(k), g = LIFTS[k].goal, sg = LIFTS[k].bw ? '+' : '', pct = ea === null ? 0 : Math.max(0, Math.min(100, ea / g * 100));
+    h += `<div style="margin:12px 0;--c:${LIFTS[k].c}"><div class="row between small"><b>${LIFTS[k].short}</b><span class="muted">${ea === null ? '—' : (ea < 0 ? '' : sg) + fmt(rnd(k, ea))} / ${sg}${g} kg</span></div><div class="goal"><div style="width:${Math.max(2, pct)}%"></div></div></div>`;
+  }
+  const bw = curBW();
+  h += `<div style="margin:12px 0;--c:var(--acc2)"><div class="row between small"><b>Poids de corps</b><span class="muted">${fmt(bw)} / ${BW_GOAL} kg</span></div><div class="goal"><div style="width:${Math.max(2, Math.min(100, (bw - BW_START) / (BW_GOAL - BW_START) * 100))}%"></div></div></div>`;
+  h += `<p class="small muted" style="line-height:1.5;margin:6px 0 0">Ce sont des objectifs long terme : ils ne se jouent pas sur un seul cycle de 12 semaines. Ce qui compte, c'est que la courbe monte à chaque cycle.</p></div>`;
+  $('#view').innerHTML = h;
+  document.querySelectorAll('.chip[data-s]').forEach(b => b.onclick = () => { statSel = b.dataset.s; render(); });
+  drawChart();
+}
+function drawChart() {
+  if (chart) { chart.destroy(); chart = null; }
+  const k = statSel, data = seriesFor(k), note = $('#cvNote');
+  const c = LIFTS[k] ? LIFTS[k].c : k === 'bw' ? '#ffb03d' : '#a78bfa';
+  if (typeof Chart === 'undefined') { note.textContent = 'Graphique indisponible (chargement impossible).'; return; }
+  if (data.length < 2) note.textContent = data.length ? 'Valide une séance force ou ajoute un record pour voir ta courbe se dessiner.' : 'Aucun record pour l’instant.';
+  else if (LIFTS[k]) note.textContent = 'Courbe = ton 1RM estimé' + (LIFTS[k].bw ? ' (lest)' : '') + '. Chaque point est un record ou une séance force validée : touche-le pour voir la série.';
+  else if (SKILLS[k]) note.textContent = 'Score = niveau × 20 + secondes tenues (max 20). Chaque palier de 20 = un niveau de plus.';
+  else note.textContent = '';
+  const ctx = $('#cv').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 250); grad.addColorStop(0, c + '55'); grad.addColorStop(1, c + '00');
+  const ds = [{ label: LIFTS[k] ? 'Charge' : 'Valeur', data: data.map(p => p.y), borderColor: c, backgroundColor: grad, fill: true, tension: .35, borderWidth: 3, pointRadius: 4, pointBackgroundColor: c, pointBorderColor: '#0a0c11', pointBorderWidth: 2 }];
+  chart = new Chart(ctx, {
+    type: 'line', data: { labels: data.map(p => short(p.d)), datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: '#eef1f7', titleColor: '#0a0c11', bodyColor: '#0a0c11', padding: 10, cornerRadius: 10, displayColors: false, callbacks: { label: c2 => LIFTS[k] ? [data[c2.dataIndex].lab, '1RM estimé : ' + (LIFTS[k].bw && c2.parsed.y >= 0 ? '+' : '') + fmt(c2.parsed.y) + ' kg'] : data[c2.dataIndex].lab } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#8b94a9', font: { family: 'Inter', size: 11 } } }, y: { grid: { color: '#1e2431' }, border: { display: false }, ticks: { color: '#8b94a9', font: { family: 'Inter', size: 11 } } } }
+    }
+  });
+}
+
+/* ============ router ============ */
+function render() {
+  if (chart && tab !== 'stats') { chart.destroy(); chart = null; }
+  ({ today: renderToday, prog: renderProg, rec: renderRec, stats: renderStats })[tab]();
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab; armed = null;
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  if (tab === 'today') viewDate = todayISO();
+  render(); window.scrollTo({ top: 0 });
+});
+render();
+connect();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
